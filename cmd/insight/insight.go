@@ -1,17 +1,21 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"runtime"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/boltdb/bolt"
 	"github.com/go-kit/kit/metrics"
 	"github.com/go-kit/kit/metrics/prometheus"
+	"github.com/gorilla/mux"
 	"github.com/seibert-media/inf-insight/pkg/insight"
 
 	raven "github.com/getsentry/raven-go"
@@ -81,20 +85,24 @@ func main() {
 	log.Info("starting")
 	defer log.Info("finished")
 	raven.CapturePanicAndWait(func() {
-		if err := do(log); err != nil {
+		if err := do(log, sentry); err != nil {
 			log.Fatal("fatal error encountered", zap.Error(err))
 			raven.CaptureErrorAndWait(err, map[string]string{"isFinal": "true"})
 		}
 	}, nil)
 }
 
-func do(log *zap.Logger) error {
+func do(log *zap.Logger, sentry *raven.Client) error {
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
 	log.Info("opening db", zap.String("file", "bolt.db"))
 	db, err := bolt.Open("bolt.db", 0600, nil)
 	if err != nil {
 		log.Fatal("db open error", zap.Error(err))
 	}
 	defer db.Close()
+	defer log.Info("closing db", zap.String("file", "bolt.db"))
 
 	var counter metrics.Counter
 	{
@@ -102,7 +110,7 @@ func do(log *zap.Logger) error {
 			Namespace: "infinity",
 			Subsystem: "insight",
 			Name:      "calls_sum",
-			Help:      "Total count of calls",
+			Help:      "total count of calls",
 		}, []string{"type", "app"})
 	}
 
@@ -114,10 +122,35 @@ func do(log *zap.Logger) error {
 		Db:      db,
 	}
 
-	http.Handle("/metrics", promhttp.Handler())
-	http.Handle("/add", insight.Handler(s))
+	r := mux.NewRouter()
+	r.Handle("/metrics", promhttp.Handler())
+	r.HandleFunc("/add", raven.RecoveryHandler(insight.Handler(s)))
 
-	return http.ListenAndServe(*httpAddr, nil)
+	h := &http.Server{
+		Addr:    *httpAddr,
+		Handler: r,
+	}
+
+	go func() {
+		log.Info("listening", zap.String("address", h.Addr))
+		if err := h.ListenAndServe(); err != http.ErrServerClosed {
+			log.Fatal("server error", zap.Error(err))
+		}
+	}()
+
+	<-stop
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	log.Info("shutting down", zap.String("timeout", "5s"))
+
+	if err := h.Shutdown(ctx); err != nil {
+		log.Info("error shutting down", zap.Error(err))
+		return err
+	}
+	log.Info("shutdown complete")
+	return nil
 }
 
 func loadPreviousMetrics(log *zap.Logger, db *bolt.DB, counter metrics.Counter) {

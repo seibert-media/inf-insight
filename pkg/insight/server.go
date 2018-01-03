@@ -20,8 +20,8 @@ type Server struct {
 }
 
 // Handler for monitoring actions
-func Handler(s Server) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func Handler(s Server) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		s.Log.Debug("started handling")
 		req, err := decodeHTTPRequest(r)
 		if err != nil {
@@ -31,7 +31,7 @@ func Handler(s Server) http.Handler {
 		}
 		s.Count(req.Type, req.App)
 		s.Log.Info("finished handling", zap.String("type", req.Type), zap.String("app", req.App))
-	})
+	}
 }
 
 // Count increments the db and prom counter
