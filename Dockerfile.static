@@ -1,0 +1,9 @@
+FROM alpine:3.6
+
+LABEL maintainer "//SEIBERT/MEDIA GmbH <docker@seibert-media.net>"
+LABEL type "public"
+LABEL versioning "simple"
+
+ADD ./build/ /
+
+CMD ["/fscrub"]
