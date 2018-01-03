@@ -8,6 +8,12 @@
   revision = "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9"
 
 [[projects]]
+  name = "github.com/boltdb/bolt"
+  packages = ["."]
+  revision = "2f1ce7a837dcb8da3ec595b1dac9d0632f0f99e8"
+  version = "v1.3.1"
+
+[[projects]]
   name = "github.com/certifi/gocertifi"
   packages = ["."]
   revision = "a4ab0227d360091084658029ec8ae45f989fba3e"
@@ -118,9 +124,15 @@
   revision = "35aad584952c3e7020db7b839f6b102de6271f89"
   version = "v1.7.1"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["unix"]
+  revision = "28a7276518d399b9634904daad79e18b44d481bc"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d8c93e477237ae16846b9239078e1fc91a42df24630bcff011afb6fddfc96a54"
+  inputs-digest = "2e2904efc0115f3da2a6f5f311d6e18f2b814b0af0d0ee1088c5ffae66946ba6"
   solver-name = "gps-cdcl"
   solver-version = 1

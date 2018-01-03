@@ -17,15 +17,13 @@ Insight can be run with default values which will result in :8080 as default end
 ```
 insight
 ```
-After starting, there are 4 Endpoints:
+After starting, there are two Endpoints:
 * `/metrics` for prometheus metrics
-* `/start` for app start logging
-* `/finish` for app finish logging
-* `/error` for app error logging
+* `/add` for app metrics logging
 
-The Endpoints require POST requests containing json with app information:
+To log you application usage do a POST requests containing json with app and type information:
 ```
-{"app": "app-name"}
+{"type": "started", "app": "app-name"}
 ```
 
 ## Development
