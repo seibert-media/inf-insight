@@ -1,7 +1,8 @@
 # inf-insight
 [![Go Report Card](https://goreportcard.com/badge/github.com/seibert-media/inf-insight)](https://goreportcard.com/report/github.com/seibert-media/inf-insight)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Build Status](https://travis-ci.org/seibert-media/inf-insight.svg?branch=master)](https://travis-ci.org/seibert-media/inf-insight)
+[![Docker Repository on Quay](https://quay.io/repository/seibertmedia/inf-insight/status "Docker Repository on Quay")](https://quay.io/repository/seibertmedia/inf-insight)
+[![Build Status](https://jenkins-inf.apps.seibert-media.net/job/InfInsight/job/master/badge/icon)](https://jenkins-inf.apps.seibert-media.net/job/InfInsight/job/master/)
 
 Small API endpoint for receiving usage statistics on internal tools and providing those metrics to prometheus.
 
