@@ -78,6 +78,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	raven.SetRelease(version.Version().Version)
 
 	// run main code
 	log.Info("starting")
