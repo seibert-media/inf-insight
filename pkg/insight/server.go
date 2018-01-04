@@ -2,8 +2,7 @@ package insight
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -26,35 +25,43 @@ func Handler(s Server) func(w http.ResponseWriter, r *http.Request) {
 		req, err := decodeHTTPRequest(r)
 		if err != nil {
 			s.Log.Error("failed handling", zap.Error(err))
-			fmt.Fprint(w, err.Error())
-			w.WriteHeader(http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			panic(err)
 		}
-		s.Count(req.Type, req.App)
+		err = s.Count(req.Type, req.App)
+		if err != nil {
+			s.Log.Error("failed incrementing", zap.Error(err))
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			panic(err)
+		}
+		w.WriteHeader(http.StatusOK)
 		s.Log.Info("finished handling", zap.String("type", req.Type), zap.String("app", req.App))
 	}
 }
 
 // Count increments the db and prom counter
-func (s Server) Count(ctype, app string) {
+func (s Server) Count(ctype, app string) error {
 	s.Counter.With("type", ctype, "app", app).Add(1)
-	s.Db.Update(func(tx *bolt.Tx) (err error) {
+	return s.Db.Update(func(tx *bolt.Tx) (err error) {
 		b := tx.Bucket([]byte(app))
 		if b == nil {
 			b, err = tx.CreateBucket([]byte(app))
 			if err != nil {
-				log.Fatal("db bucketCreate error",
+				s.Log.Error("db bucketCreate error",
 					zap.String("type", ctype),
 					zap.String("app", app),
 					zap.Error(err),
 				)
+				return err
 			}
 			err = b.Put([]byte(ctype), []byte("0"))
 			if err != nil {
-				log.Fatal("db put error",
+				s.Log.Error("db put error",
 					zap.String("type", ctype),
 					zap.String("app", app),
 					zap.Error(err),
 				)
+				return err
 			}
 		}
 		v := b.Get([]byte(ctype))
@@ -63,17 +70,19 @@ func (s Server) Count(ctype, app string) {
 		}
 		vi, err := strconv.Atoi(string(v))
 		if err != nil {
-			log.Fatal("count error", zap.Error(err))
+			s.Log.Error("count error", zap.Error(err))
+			return err
 		}
 		vi = vi + 1
 		v = []byte(strconv.Itoa(vi))
 		err = b.Put([]byte(ctype), v)
 		if err != nil {
-			log.Fatal("db put error",
+			s.Log.Error("db put error",
 				zap.String("type", ctype),
 				zap.String("app", app),
 				zap.Error(err),
 			)
+			return err
 		}
 		return nil
 	})
@@ -88,5 +97,14 @@ type Request struct {
 func decodeHTTPRequest(r *http.Request) (Request, error) {
 	var req Request
 	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		return req, err
+	}
+	if req.App == "" {
+		return req, errors.New("missing key: app")
+	}
+	if req.Type == "" {
+		return req, errors.New("missing key: type")
+	}
 	return req, err
 }

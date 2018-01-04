@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"net/http"
@@ -73,10 +74,6 @@ func main() {
 	var err error
 
 	// prepare sentry error logging
-	sentry, err = raven.New(*sentryDsn)
-	if err != nil {
-		panic(err)
-	}
 	err = raven.SetDSN(*sentryDsn)
 	if err != nil {
 		panic(err)
@@ -86,14 +83,13 @@ func main() {
 	log.Info("starting")
 	defer log.Info("finished")
 	raven.CapturePanicAndWait(func() {
-		if err := do(log, sentry); err != nil {
-			log.Fatal("fatal error encountered", zap.Error(err))
+		if err := do(log); err != nil {
 			raven.CaptureErrorAndWait(err, map[string]string{"isFinal": "true"})
 		}
 	}, nil)
 }
 
-func do(log *zap.Logger, sentry *raven.Client) error {
+func do(log *zap.Logger) error {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
@@ -125,7 +121,7 @@ func do(log *zap.Logger, sentry *raven.Client) error {
 
 	r := mux.NewRouter()
 	r.Handle("/metrics", promhttp.Handler())
-	r.HandleFunc("/add", raven.RecoveryHandler(insight.Handler(s)))
+	r.HandleFunc("/add", recoveryHandler(insight.Handler(s)))
 
 	h := &http.Server{
 		Addr:    *httpAddr,
@@ -185,7 +181,10 @@ func newLogger(dbg bool) *zap.Logger {
 		return lvl >= zapcore.ErrorLevel
 	})
 	lowPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl < zapcore.ErrorLevel
+		if dbg {
+			return lvl < zapcore.ErrorLevel
+		}
+		return (lvl < zapcore.ErrorLevel) && (lvl > zapcore.DebugLevel)
 	})
 
 	consoleDebugging := zapcore.Lock(os.Stdout)
@@ -208,4 +207,17 @@ func newLogger(dbg bool) *zap.Logger {
 		)
 	}
 	return logger
+}
+
+func recoveryHandler(handler func(http.ResponseWriter, *http.Request)) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rval := recover(); rval != nil {
+				rvalStr := fmt.Sprint(rval)
+				packet := raven.NewPacket(rvalStr, raven.NewException(errors.New(rvalStr), raven.GetOrNewStacktrace(rval.(error), 2, 3, nil)), raven.NewHttp(r))
+				raven.Capture(packet, nil)
+			}
+		}()
+		handler(w, r)
+	}
 }
