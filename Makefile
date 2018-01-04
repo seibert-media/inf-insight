@@ -1,7 +1,7 @@
 NAME         := inf-insight
 REPO         := seibert-media
 GIT_HOST     := github.com
-REGISTRY     := docker.io
+REGISTRY     := quay.io
 IMAGE        := seibertmedia/$(NAME)
 
 PATH := $(GOPATH)/bin:$(PATH)

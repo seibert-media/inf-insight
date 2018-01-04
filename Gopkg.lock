@@ -48,6 +48,18 @@
   revision = "1e59b77b52bf8e4b449a57e6f79f21226d571845"
 
 [[projects]]
+  name = "github.com/gorilla/context"
+  packages = ["."]
+  revision = "1ea25387ff6f684839d82767c1733ff4d4d15d0a"
+  version = "v1.1"
+
+[[projects]]
+  name = "github.com/gorilla/mux"
+  packages = ["."]
+  revision = "7f08801859139f86dfafd1c296e2cba9a80d292e"
+  version = "v1.6.0"
+
+[[projects]]
   branch = "master"
   name = "github.com/kolide/kit"
   packages = ["version"]
@@ -133,6 +145,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2e2904efc0115f3da2a6f5f311d6e18f2b814b0af0d0ee1088c5ffae66946ba6"
+  inputs-digest = "22c4a8f4183284f4ce54fcaf7cee6eaddd78ec74d845463e1165eca45c7134ec"
   solver-name = "gps-cdcl"
   solver-version = 1
