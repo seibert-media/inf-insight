@@ -96,11 +96,6 @@ podTemplate(
 						"""
 					}
 				}
-				stage('Deps') {
-					timeout(time: 15, unit: 'MINUTES') {
-						sh "cd /go/src/github.com/seibert-media/inf-insight && make deps"
-					}
-				}
 				stage('Build') {
 					timeout(time: 15, unit: 'MINUTES') {
 						sh "cd /go/src/github.com/seibert-media/inf-insight && make docker"
@@ -109,11 +104,6 @@ podTemplate(
 				stage('Upload') {
 					timeout(time: 15, unit: 'MINUTES') {
 						sh "cd /go/src/github.com/seibert-media/inf-insight && make upload"
-					}
-				}
-				stage('Clean') {
-					timeout(time: 5, unit: 'MINUTES') {
-						sh "cd /go/src/github.com/seibert-media/inf-insight && make clean"
 					}
 				}
 			}
