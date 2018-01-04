@@ -38,6 +38,7 @@ var (
 	dbgPtr      = flag.Bool("debug", false, "debug printing")
 	versionPtr  = flag.Bool("version", true, "show or hide version info")
 	httpAddr    = flag.String("http.addr", ":8080", "HTTP listen address")
+	dbPtr       = flag.String("db", "bolt.db", "path to the db file")
 
 	sentry *raven.Client
 )
@@ -96,13 +97,13 @@ func do(log *zap.Logger, sentry *raven.Client) error {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
-	log.Info("opening db", zap.String("file", "bolt.db"))
-	db, err := bolt.Open("bolt.db", 0600, nil)
+	log.Info("opening db", zap.String("file", *dbPtr))
+	db, err := bolt.Open(*dbPtr, 0600, nil)
 	if err != nil {
 		log.Fatal("db open error", zap.Error(err))
 	}
 	defer db.Close()
-	defer log.Info("closing db", zap.String("file", "bolt.db"))
+	defer log.Info("closing db", zap.String("file", *dbPtr))
 
 	var counter metrics.Counter
 	{
