@@ -37,7 +37,7 @@ podTemplate(
 	],
 	volumes: [
 		secretVolume(mountPath: '/root/.ssh', secretName: 'ssh'),
-		secretVolume(mountPath: '/home/jenkins/.docker', secretName: 'docker'),
+		secretVolume(mountPath: '/home/jenkins/.docker', secretName: 'docker-quay'),
 		hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock'),
 	],
 	inheritFrom: '',
