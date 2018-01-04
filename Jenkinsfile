@@ -106,6 +106,11 @@ podTemplate(
 						sh "cd /go/src/github.com/seibert-media/inf-insight && make upload"
 					}
 				}
+				stage('Notify') {
+					timeout(time: 1, unit: 'MINUTES') {
+						sh 'VERSION = make version; curl https://sentry.io/api/hooks/release/builtin/266406/e03a15065519690fe396543fbbaf3e3a1b31bbb62d9b691675312a4857ee2095/ -X POST -H \'Content-Type: application/json\' -d \'{"version": "${VERSION}"}\''
+					}
+				}
 			}
 			currentBuild.result = 'SUCCESS'
 		} catch (any) {
