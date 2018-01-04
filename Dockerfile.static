@@ -1,4 +1,4 @@
-FROM alpine:3.6
+FROM scratch
 
 LABEL maintainer "//SEIBERT/MEDIA GmbH <docker@seibert-media.net>"
 LABEL type "public"
