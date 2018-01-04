@@ -6,8 +6,8 @@ IMAGE        := seibertmedia/$(NAME)
 
 PATH := $(GOPATH)/bin:$(PATH)
 TOOLS_DIR := cmd
-VERSION = $(shell git describe --tags --always --dirty)
-BRANCH = $(shell git rev-parse --abbrev-ref HEAD)
+VERSION = $(shell git fetch --tags; git describe --tags --always --dirty)
+BRANCH_NAME ?= $(shell git rev-parse --abbrev-ref HEAD)
 REVISION = $(shell git rev-parse HEAD)
 REVSHORT = $(shell git rev-parse --short HEAD)
 USER = $(shell whoami)
