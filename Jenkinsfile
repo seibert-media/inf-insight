@@ -36,7 +36,6 @@ podTemplate(
 		),
 	],
 	volumes: [
-		secretVolume(mountPath: '/root/.ssh', secretName: 'ssh'),
 		secretVolume(mountPath: '/home/jenkins/.docker', secretName: 'docker-quay'),
 		hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock'),
 	],
@@ -56,14 +55,16 @@ podTemplate(
 		])
 		try {
 			container('build-golang') {
-				stage('Fix SSH Permissions') {
-					timeout(time: 1, unit: 'MINUTES') {
-						sh 'chmod 600 /root/.ssh/*'
-					}
-				}
 				stage('Checkout') {
 					timeout(time: 5, unit: 'MINUTES') {
-						checkout scm
+						checkout([
+							$class: 'GitSCM',
+							branches: scm.branches,
+							doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+							extensions: scm.extensions + [[$class: 'CloneOption', noTags: false, reference: '', shallow: true]],
+							submoduleCfg: [],
+							userRemoteConfigs: scm.userRemoteConfigs
+						])
 						sh """
 						mkdir -p /go/src/github.com/seibert-media
 						ln -s `pwd` /go/src/github.com/seibert-media/inf-insight
@@ -82,14 +83,16 @@ podTemplate(
 				}
 			}
 			container('build-docker') {
-				stage('Fix SSH Permissions') {
-					timeout(time: 1, unit: 'MINUTES') {
-						sh 'chmod 600 /root/.ssh/*'
-					}
-				}
 				stage('Checkout') {
 					timeout(time: 5, unit: 'MINUTES') {
-						checkout scm
+						checkout([
+							$class: 'GitSCM',
+							branches: scm.branches,
+							doGenerateSubmoduleConfigurations: scm.doGenerateSubmoduleConfigurations,
+							extensions: scm.extensions + [[$class: 'CloneOption', noTags: false, reference: '', shallow: true]],
+							submoduleCfg: [],
+							userRemoteConfigs: scm.userRemoteConfigs
+						])
 						sh """
 						mkdir -p /go/src/github.com/seibert-media
 						ln -s `pwd` /go/src/github.com/seibert-media/inf-insight
