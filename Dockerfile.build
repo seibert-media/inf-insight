@@ -1,4 +1,4 @@
-FROM golang:1.8
+FROM golang:1.10
 
 LABEL maintainer "//SEIBERT/MEDIA GmbH <docker@seibert-media.net>"
 LABEL type "public"
@@ -12,7 +12,6 @@ ARG COMMAND
 ADD ./ /go/src/${GIT_HOST}/${REPO}/${NAME}
 WORKDIR /go/src/${GIT_HOST}/${REPO}/${NAME}/
 
-RUN make deps
 RUN make ${COMMAND}
 
 CMD ["/bin/bash"]
