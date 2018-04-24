@@ -71,11 +71,6 @@ podTemplate(
 						"""
 					}
 				}
-				stage('Deps') {
-					timeout(time: 15, unit: 'MINUTES') {
-						sh "cd /go/src/github.com/seibert-media/inf-insight && make deps"
-					}
-				}
 				stage('Test') {
 					timeout(time: 15, unit: 'MINUTES') {
 						sh "cd /go/src/github.com/seibert-media/inf-insight && make test"
